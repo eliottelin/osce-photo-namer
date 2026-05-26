@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSCE Photo Namer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f3;
+    color: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e0e0db;
+    padding: 2rem;
+    width: 100%;
+    max-width: 560px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.75rem;
+  }
+  .brand-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #500000;
+  }
+  .brand-text {
+    font-size: 13px;
+    color: #888;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 1.75rem;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { margin-bottom: 1.1rem; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+  select:focus, input[type="text"]:focus { border-color: #500000; box-shadow: 0 0 0 3px rgba(80,0,0,0.08); }
+  .hint { font-size: 12px; color: #aaa; margin-top: 5px; }
+  .btn-generate {
+    width: 100%;
+    padding: 11px;
+    background: #500000;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.15s;
+  }
+  .btn-generate:hover { background: #3a0000; }
+  .output {
+    display: none;
+    margin-top: 1.5rem;
+    background: #f9f8f6;
+    border: 1px solid #e0e0db;
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .output.visible { display: block; }
+  .output-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+  .filename {
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 15px;
+    color: #1a1a1a;
+    word-break: break-all;
+    line-height: 1.6;
+  }
+  .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .btn-copy {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.15s;
+  }
+  .btn-copy:hover { border-color: #500000; color: #500000; }
+  .btn-copy.copied { border-color: #2d7a4f; color: #2d7a4f; }
+  .btn-reset {
+    font-size: 13px;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 7px 4px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .btn-reset:hover { color: #555; }
+  .divider { border: none; border-top: 1px solid #eeede8; margin: 1.75rem 0 1.25rem; }
+  .sop-note { font-size: 12px; color: #bbb; }
+  .sop-note code { font-family: monospace; }
+  @media (max-width: 480px) {
+    .row { grid-template-columns: 1fr; }
+    .card { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <span class="brand-text">Office of Sustainability &amp; Campus Enrichment</span>
+  </div>
+  <h1>Photo file namer</h1>
+  <p class="subtitle">Generates correctly formatted filenames per SOP 120082-ADM-0002.1</p>
+
+  <div class="row">
+    <div class="field">
+      <label for="year">Year taken</label>
+      <select id="year"></select>
+    </div>
+    <div class="field">
+      <label for="event">Event code</label>
+      <select id="event"></select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="desc">Brief description</label>
+    <input type="text" id="desc" placeholder="e.g. solar car student" maxlength="60" />
+    <p class="hint">Subject, people, or moment — no underscores needed</p>
+  </div>
+
+  <div class="field">
+    <label for="credit">Photo credit <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input type="text" id="credit" placeholder="e.g. Reveille, staff name" maxlength="40" />
+  </div>
+
+  <button class="btn-generate" onclick="generate()">Generate filename</button>
+
+  <div class="output" id="output">
+    <p class="output-label">Generated filename</p>
+    <p class="filename" id="result"></p>
+    <div class="actions">
+      <button class="btn-copy" id="copyBtn" onclick="copyName()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy filename
+      </button>
+      <button class="btn-reset" onclick="reset()">Start over</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <p class="sop-note">Format: <code>YEAR_EVENTCODE_description_credit</code> &nbsp;·&nbsp; Files go in <code>N:\Office of Sustainability\3_Photo Repository</code></p>
+</div>
+
+<script>
+const events = [
+  ["AASHE","Assoc. for Advancement of Sust. in HE"],
+  ["AGF","Aggie Green Fund"],
+  ["AGFAC","Aggie Green Fund Advisory Comm."],
+  ["ASA","Aggie Sustainability Alliance"],
+  ["BKFST","Sustainability Breakfast"],
+  ["BVFB","Brazos Valley Food Bank"],
+  ["CAM","Sustainability Cam"],
+  ["CED","Campus Earth Day"],
+  ["CEM","Campus Earth Month"],
+  ["CONF","Conference"],
+  ["CSD","Campus Sustainability Day"],
+  ["CSM","Campus Sustainability Month"],
+  ["FT","Field Trips"],
+  ["INTERN","Sustainability Internship"],
+  ["SE","Special Event"],
+  ["TABLE","Tabling"],
+  ["TAMU","TAMU Today"],
+  ["TRACS","Texas Regional Alliance for Campus Sustainability"],
+  ["WKSHP","Workshop"]
+];
+
+const yearSel = document.getElementById('year');
+const now = new Date().getFullYear();
+for (let y = now; y >= 2019; y--) {
+  const o = document.createElement('option');
+  o.value = y; o.textContent = y;
+  yearSel.appendChild(o);
+}
+
+const eventSel = document.getElementById('event');
+events.forEach(([code, label]) => {
+  const o = document.createElement('option');
+  o.value = code;
+  o.textContent = code + ' — ' + label;
+  eventSel.appendChild(o);
+});
+
+function slugify(str) {
+  return str.trim().replace(/_/g, '-').replace(/\s+/g, ' ');
+}
+
+function generate() {
+  const desc = slugify(document.getElementById('desc').value);
+  if (!desc) { document.getElementById('desc').focus(); return; }
+
+  const year = yearSel.value;
+  const code = eventSel.value;
+  const credit = slugify(document.getElementById('credit').value);
+
+  let name = year + '_' + code + '_' + desc;
+  if (credit) name += '_' + credit;
+
+  document.getElementById('result').textContent = name;
+  const box = document.getElementById('output');
+  box.classList.add('visible');
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const btn = document.getElementById('copyBtn');
+  btn.classList.remove('copied');
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy filename';
+}
+
+function copyName() {
+  navigator.clipboard.writeText(document.getElementById('result').textContent).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 11 4 16"/></svg> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy filename';
+    }, 2500);
+  });
+}
+
+function reset() {
+  document.getElementById('desc').value = '';
+  document.getElementById('credit').value = '';
+  document.getElementById('output').classList.remove('visible');
+  document.getElementById('desc').focus();
+}
+</script>
+</body>
+</html>
